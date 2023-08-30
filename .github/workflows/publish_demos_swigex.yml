@@ -39,7 +39,7 @@ jobs:
     - name: Install Python packages
       run: |
         python -m pip install --upgrade pip
-        python -m pip install numpy nbformat nbconvert
+        python -m pip install numpy nbconvert
         python -m pip install swigex
         
     - name: Install R packages
@@ -53,8 +53,8 @@ jobs:
         mkdir -p demos
         mkdir -p demos/python
         mkdir -p demos/r
-        python swigex/python/run_test_ipynb.py swigex/doc/demo/python/testFibo.ipynb demos/python html
         R CMD BATCH --no-save --no-restore "--args swigex/doc/demo/python/testFibo.ipynb demos/r html" swigex/r/run_test_rmd.R
+        python swigex/python/run_test_ipynb.py swigex/doc/demo/python/testFibo.ipynb demos/python html
         PROJECT_VERSION=$(python -c "import swigex; print(swigex.__version__)")
         echo "PROJECT_VERSION=${PROJECT_VERSION}" >> "$GITHUB_ENV"
 
