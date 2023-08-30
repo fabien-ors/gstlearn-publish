@@ -40,7 +40,7 @@ jobs:
     - name: Install Python packages
       run: |
         python -m pip install --upgrade pip
-        python -m pip install numpy matplotlib pandas scipy jupyter pypandoc scikit-sparse geopandas plotly
+        python -m pip install numpy nbconvert matplotlib pandas scipy jupyter pypandoc scikit-sparse geopandas plotly
         python -m pip install gstlearn
         
     - name: Install R packages
@@ -50,27 +50,24 @@ jobs:
         install.packages("gstlearn", repos="https://soft.mines-paristech.fr/cran")
       shell: Rscript {0}
 
-    - name: Build demonstration HTMLs and save generated folder name in the environment
+    - name: Build demonstration HTMLs
       run: |
-        export PATH=/opt/python/py311/bin:$PATH
-        cmake -B${{env.BUILD_DIR}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_PYTHON=ON -DBUILD_R=ON
-        cmake --build ${{env.BUILD_DIR}} --target build_demos
-        PROJECT_VERSION=$(cmake --build ${{env.BUILD_DIR}} --target print_version | grep PROJECT_VERSION | cut -d "=" -f2 | xargs)
-        echo "DEMO_FOLDER=${{env.BUILD_DIR}}/demo" >> "$GITHUB_ENV"
-        echo "PROJECT_VERSION=${PROJECT_VERSION}" >> "$GITHUB_ENV"
-
-    - name: Print version
-      run: echo "PROJECT_VERSION=${{ env.PROJECT_VERSION }}"
+        mkdir -p demos
+        mkdir -p demos/python
+        mkdir -p demos/r
+        ./gstlearn/doc/build_ipynb_html.sh gstlearn/doc/demo demos/python gstlearn/python/run_test_ipynb.py
+        ./gstlearn/doc/build_rmd_html.sh   gstlearn/doc/demo demos/r      gstlearn/r/run_test_rmd.R
+        PROJECT_VERSION=$(python -c "import gstlearn as gl; print(gl.__version__)")
 
     - uses: actions/upload-artifact@v3 
       with:
         # This will become the folder name in the server
         name: demos-${{ env.PROJECT_VERSION }}
-        path: ${{ env.DEMO_FOLDER }}
+        path: demos
 
   publish:
     needs: build
-    # Only ubuntu can upload to CRAN easily (ssh)
+    # Only ubuntu can upload easily (ssh)
     runs-on: ubuntu-latest
     
     steps:
@@ -79,7 +76,7 @@ jobs:
         host: ${{ secrets.CG_HOST }}
         username: ${{ secrets.CG_USR }}
         password: ${{ secrets.CG_PWD }}
-        dest-path: "/var/www/html/swigex"
+        dest-path: "/var/www/html/gstlearn"
         
     # Delete the artifacts (for freeing storage space under github)
     - uses: geekyeggo/delete-artifact@v2
