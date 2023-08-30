@@ -53,8 +53,8 @@ jobs:
         mkdir -p demos
         mkdir -p demos/python
         mkdir -p demos/r
-        R CMD BATCH --no-save --no-restore "--args swigex/doc/demo/r/testFibo.Rmd demos/r html" swigex/r/run_test_rmd.R
-        python swigex/python/run_test_ipynb.py swigex/doc/demo/python/testFibo.ipynb demos/python html
+        ./swigex/doc/build_ipynb_html.sh swigex/doc/demo demos/python swigex/python/run_test_ipynb.py
+        ./swigex/doc/build_rmd_html.sh   swigex/doc/demo demos/r      swigex/r/run_test_rmd.R
         PROJECT_VERSION=$(python -c "import swigex; print(swigex.__version__)")
         echo "PROJECT_VERSION=${PROJECT_VERSION}" >> "$GITHUB_ENV"
 

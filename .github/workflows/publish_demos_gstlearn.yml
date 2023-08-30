@@ -58,6 +58,7 @@ jobs:
         ./gstlearn/doc/build_ipynb_html.sh gstlearn/doc/demo demos/python gstlearn/python/run_test_ipynb.py
         ./gstlearn/doc/build_rmd_html.sh   gstlearn/doc/demo demos/r      gstlearn/r/run_test_rmd.R
         PROJECT_VERSION=$(python -c "import gstlearn as gl; print(gl.__version__)")
+        echo "PROJECT_VERSION=${PROJECT_VERSION}" >> "$GITHUB_ENV"
 
     - uses: actions/upload-artifact@v3 
       with:
