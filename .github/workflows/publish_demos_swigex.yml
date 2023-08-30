@@ -16,6 +16,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     
+    steps:
     - name: Checkout swigex repository
       uses: actions/checkout@v3
       with:
