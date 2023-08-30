@@ -1,4 +1,4 @@
-name: publish_demos
+name: publish_demos_swigex
 
 on:
   workflow_dispatch:
