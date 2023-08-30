@@ -48,7 +48,6 @@ jobs:
         install.packages(c("ggplot2","ggpubr","parallel","FNN","rmarkdown","knitr"))
         install.packages("flumy", repos="https://soft.mines-paristech.fr/cran")
         install.packages("gstlearn", repos="https://soft.mines-paristech.fr/cran")
-        remotes::install_deps(dependencies = TRUE)
       shell: Rscript {0}
 
     - name: Build demonstration HTMLs and save generated folder name in the environment

@@ -46,7 +46,6 @@ jobs:
       run: |
         install.packages(c("rmarkdown","knitr"))
         install.packages("swigex", repos="https://soft.mines-paristech.fr/cran")
-        remotes::install_deps(dependencies = TRUE)
       shell: Rscript {0}
 
     - name: Build demonstration HTMLs
