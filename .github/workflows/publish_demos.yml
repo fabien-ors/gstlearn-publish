@@ -1,0 +1,87 @@
+name: publish_demos
+
+on:
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Manual'
+        required: false
+        default: ''
+
+env:
+  PYTHON_VERSION : "3.11"
+  R_VERSION : "4.2.3"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    - name: Checkout gstlearn repository
+      uses: actions/checkout@v3
+      with:
+        repository: gstlearn/gstlearn
+        token: ${{ secrets.GH_PAT }}
+        path: gstlearn
+
+    - name: Install System dependencies
+      run: sudo apt install pandoc jupyter libsuitesparse-dev
+
+    - name: Setup Python version
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{env.PYTHON_VERSION}}
+        
+    - name: Setup R version
+      uses: r-lib/actions/setup-r@v2
+      with:
+        r-version: ${{env.R_VERSION}}
+
+    - name: Install Python packages
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install numpy matplotlib pandas scipy jupyter pypandoc scikit-sparse geopandas plotly
+        python -m pip install gstlearn
+        
+    - name: Install R packages
+      run: |
+        install.packages(c("ggplot2","ggpubr","parallel","FNN","rmarkdown","knitr"))
+        install.packages("flumy", repos="https://soft.mines-paristech.fr/cran")
+        install.packages("gstlearn", repos="https://soft.mines-paristech.fr/cran")
+        remotes::install_deps(dependencies = TRUE)
+      shell: Rscript {0}
+
+    - name: Build demonstration HTMLs and save generated folder name in the environment
+      run: |
+        export PATH=/opt/python/py311/bin:$PATH
+        cmake -B${{env.BUILD_DIR}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_PYTHON=ON -DBUILD_R=ON
+        cmake --build ${{env.BUILD_DIR}} --target build_demos
+        PROJECT_VERSION=$(cmake --build ${{env.BUILD_DIR}} --target print_version | grep PROJECT_VERSION | cut -d "=" -f2 | xargs)
+        echo "DEMO_FOLDER=${{env.BUILD_DIR}}/demo" >> "$GITHUB_ENV"
+        echo "PROJECT_VERSION=${PROJECT_VERSION}" >> "$GITHUB_ENV"
+
+    - name: Print version
+      run: echo "PROJECT_VERSION=${{ env.PROJECT_VERSION }}"
+
+    - uses: actions/upload-artifact@v3 
+      with:
+        # This will become the folder name in the server
+        name: demos-${{ env.PROJECT_VERSION }}
+        path: ${{ env.DEMO_FOLDER }}
+
+  publish:
+    needs: build
+    # Only ubuntu can upload to CRAN easily (ssh)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: fabien-ors/folder-publish-action@v1
+      with:
+        host: ${{ secrets.CG_HOST }}
+        username: ${{ secrets.CG_USR }}
+        password: ${{ secrets.CG_PWD }}
+        dest-path: "/var/www/html/swigex"
+        
+    # Delete the artifacts (for freeing storage space under github)
+    - uses: geekyeggo/delete-artifact@v2
+      with:
+        name: demos-*
